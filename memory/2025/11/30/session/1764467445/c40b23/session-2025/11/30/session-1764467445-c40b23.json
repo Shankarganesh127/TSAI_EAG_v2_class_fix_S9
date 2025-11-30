@@ -1,0 +1,36 @@
+[
+  {
+    "timestamp": 1764467445.335133,
+    "type": "run_metadata",
+    "text": "Started new session with input: What do you know about Don Tapscott and Anthony Williams? at 2025-11-30T01:50:45.335133",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-11-30T01:50:45.335133",
+      "step": 0
+    }
+  },
+  {
+    "timestamp": 1764467527.053048,
+    "type": "run_metadata",
+    "text": "Started new session with input: What is cricket? at 2025-11-30T01:52:07.053047",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-11-30T01:52:07.053047",
+      "step": 0
+    }
+  }
+]

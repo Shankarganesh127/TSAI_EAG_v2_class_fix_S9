@@ -1,0 +1,10 @@
+*.pyc
+__pycache__/
+.env
+/documents/
+/faiss_index/
+
+core/__pycache__/
+modules/__pycache__/
+
+.venv
