@@ -3,16 +3,18 @@ import httpx
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
-import urllib.parse
 import sys
 import traceback
 import asyncio
 from datetime import datetime, timedelta
-import time
 import re
-from pydantic import BaseModel, Field
 from models import SearchInput, UrlInput
 from models import PythonCodeOutput  # Import the models we need
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 @dataclass
@@ -47,16 +49,24 @@ class RateLimiter:
 class DuckDuckGoSearcher:
     BASE_URL = "https://html.duckduckgo.com/html"
     HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://duckduckgo.com/",
     }
 
     def __init__(self):
         self.rate_limiter = RateLimiter()
+        # Google Custom Search API requires both API key and CX (search engine id)
+        self.google_api_key = os.getenv("GOOGLE_API_KEY")
+        self.google_cx = os.getenv("GOOGLE_CSE_ID")
+        # (SerpAPI disabled for now; using pure Google Custom Search)
+        self.serpapi_key = None  # previously: os.getenv("SERPAPI_KEY")
 
     def format_results_for_llm(self, results: List[SearchResult]) -> str:
         """Format results in a natural language style that's easier for LLMs to process"""
         if not results:
-            return "No results were found for your search query. This could be due to DuckDuckGo's bot detection or the query returned no matches. Please try rephrasing your search or try again in a few minutes."
+            return "No results were found for your search query. The query may not have returned any matches. Please try rephrasing your search."
 
         output = []
         output.append(f"Found {len(results)} search results:\n")
@@ -73,68 +83,44 @@ class DuckDuckGoSearcher:
         self, query: str, ctx: Context, max_results: int = 10
     ) -> List[SearchResult]:
         try:
-            # Apply rate limiting
-            await self.rate_limiter.acquire()
-
-            # Create form data for POST request
-            data = {
-                "q": query,
-                "b": "",
-                "kl": "",
-            }
-
-            await ctx.info(f"Searching DuckDuckGo for: {query}")
-
-            async with httpx.AsyncClient() as client:
-                result = await client.post(
-                    self.BASE_URL, data=data, headers=self.HEADERS, timeout=30.0
-                )
-                result.raise_for_status()
-
-            # Parse HTML result
-            soup = BeautifulSoup(result.text, "html.parser")
-            if not soup:
-                await ctx.error("Failed to parse HTML result")
+            # Use Google Custom Search API exclusively
+            if not self.google_api_key or not self.google_cx:
+                await ctx.error("Google API credentials not configured. Please set GOOGLE_API_KEY and GOOGLE_CSE_ID in .env file")
                 return []
-
-            results = []
-            for result in soup.select(".result"):
-                title_elem = result.select_one(".result__title")
-                if not title_elem:
-                    continue
-
-                link_elem = title_elem.find("a")
-                if not link_elem:
-                    continue
-
-                title = link_elem.get_text(strip=True)
-                link = link_elem.get("href", "")
-
-                # Skip ad results
-                if "y.js" in link:
-                    continue
-
-                # Clean up DuckDuckGo redirect URLs
-                if link.startswith("//duckduckgo.com/l/?uddg="):
-                    link = urllib.parse.unquote(link.split("uddg=")[1].split("&")[0])
-
-                snippet_elem = result.select_one(".result__snippet")
-                snippet = snippet_elem.get_text(strip=True) if snippet_elem else ""
-
-                results.append(
-                    SearchResult(
-                        title=title,
-                        link=link,
-                        snippet=snippet,
-                        position=len(results) + 1,
-                    )
+            
+            await ctx.info("Using Google Custom Search API for web search")
+            params = {
+                "key": self.google_api_key,
+                "cx": self.google_cx,
+                "q": query,
+                "num": max_results,
+            }
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.get(
+                    "https://www.googleapis.com/customsearch/v1",
+                    params=params,
                 )
-
-                if len(results) >= max_results:
-                    break
-
-            await ctx.info(f"Successfully found {len(results)} results")
-            return results
+                resp.raise_for_status()
+                data = resp.json()
+                items = data.get("items", [])
+                results: List[SearchResult] = []
+                for i, item in enumerate(items, start=1):
+                    results.append(
+                        SearchResult(
+                            title=item.get("title", ""),
+                            link=item.get("link", ""),
+                            snippet=item.get("snippet", ""),
+                            position=i,
+                        )
+                    )
+                    if len(results) >= max_results:
+                        break
+                if results:
+                    await ctx.info(f"Successfully found {len(results)} results via Google CSE")
+                    return results
+                else:
+                    await ctx.info("Google CSE returned no results for this query")
+                    return []
 
         except httpx.TimeoutException:
             await ctx.error("Search request timed out")
@@ -216,7 +202,7 @@ fetcher = WebContentFetcher()
 
 @mcp.tool()
 async def duckduckgo_search_results(input: SearchInput, ctx: Context) -> str:
-    """Search DuckDuckGo. Usage: input={"input": {"query": "latest AI developments", "max_results": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)"""
+    """Search the web using Google Custom Search API. Usage: input={"input": {"query": "latest AI developments", "max_results": 5} } result = await mcp.call_tool('duckduckgo_search_results', input)"""
     try:
         results = await searcher.search(input.query, ctx, input.max_results)
         return PythonCodeOutput(result=searcher.format_results_for_llm(results))

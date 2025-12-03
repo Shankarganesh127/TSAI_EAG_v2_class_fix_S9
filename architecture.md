@@ -45,7 +45,7 @@ graph TD
     %% Data Flow
     User -->|Input| Context
     Perception -->|Tool Hints| Decision
-    Decision -->|Plan (Python Code)| Action
+    Decision -->|"Plan (Python Code)"| Action
     Action -->|Tool Results| Context
     Context -->|History| Decision
 ```

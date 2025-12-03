@@ -340,7 +340,7 @@ def process_documents():
 
             elif ext in [".html", ".htm", ".url"]:
                 mcp_log("INFO", f"Using Trafilatura to extract {file.name}")
-                markdown = extract_webpage(UrlInput(url=file.read_text().strip())).markdown
+                markdown = convert_webpage_url_into_markdown(UrlInput(url=file.read_text().strip())).markdown
 
             else:
                 # Fallback to MarkItDown for other formats

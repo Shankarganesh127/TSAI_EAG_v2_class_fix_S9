@@ -10,6 +10,7 @@ from core.strategy import select_decision_prompt_path
 from core.context import AgentContext
 from modules.tools import summarize_tools
 import re
+import json
 
 try:
     from agent import log
@@ -19,6 +20,22 @@ except ImportError:
         now = datetime.datetime.now().strftime("%H:%M:%S")
         print(f"[{now}] [{stage}] {msg}")
 
+def clean_tool_result(content: str) -> str:
+    """Clean and format tool results for better readability"""
+    try:
+        # Check if content contains MCP result format with TextContent
+        if "content=[TextContent(" in content and '"result":' in content:
+            # Extract the JSON result from the TextContent
+            match = re.search(r'"result":\s*"([^"]*(?:\\.[^"]*)*)"', content)
+            if match:
+                json_str = match.group(1)
+                # Unescape the JSON string
+                decoded = json_str.encode().decode('unicode_escape')
+                return decoded
+        return content
+    except Exception:
+        return content
+
 class AgentLoop:
     def __init__(self, context: AgentContext):
         self.context = context
@@ -27,6 +44,8 @@ class AgentLoop:
 
     async def run(self):
         max_steps = self.context.agent_profile.strategy.max_steps
+        last_perception = None
+        last_selected_servers = None
 
         for step in range(max_steps):
             print(f"🔁 Step {step+1}/{max_steps} starting...")
@@ -36,11 +55,22 @@ class AgentLoop:
             while lifelines_left >= 0:
                 # === Perception ===
                 user_input_override = getattr(self.context, "user_input_override", None)
-                perception = await run_perception(context=self.context, user_input=user_input_override or self.context.user_input)
+                
+                # Skip perception if we have override (FURTHER_PROCESSING continuation)
+                if user_input_override and last_perception and last_selected_servers:
+                    print("[perception] (skipped) using cached perception due to override")
+                    perception = last_perception
+                    selected_servers = last_selected_servers
+                    # Clear override after consuming it
+                    self.context.user_input_override = None
+                else:
+                    perception = await run_perception(context=self.context, user_input=user_input_override or self.context.user_input)
+                    print(f"[perception] {perception}")
+                    selected_servers = perception.selected_servers
+                    # Cache for potential reuse
+                    last_perception = perception
+                    last_selected_servers = selected_servers
 
-                print(f"[perception] {perception}")
-
-                selected_servers = perception.selected_servers
                 selected_tools = self.mcp.get_tools_from_servers(selected_servers)
                 if not selected_tools:
                     log("loop", "⚠️ No tools selected — aborting step.")
@@ -62,7 +92,7 @@ class AgentLoop:
                     step_num=step + 1,
                     max_steps=max_steps,
                 )
-                print(f"[plan] {plan}")
+                #print(f"[plan] {plan}")
 
                 # === Execution ===
                 if re.search(r"^\s*(async\s+)?def\s+solve\s*\(", plan, re.MULTILINE):
@@ -88,10 +118,12 @@ class AgentLoop:
                             return {"status": "done", "result": self.context.final_answer}
                         elif result.startswith("FURTHER_PROCESSING_REQUIRED:"):
                             content = result.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
-                            self.context.user_input_override  = (
+                            # Clean and format the content for better readability
+                            cleaned_content = clean_tool_result(content)
+                            self.context.user_input_override = (
                                 f"Original user task: {self.context.user_input}\n\n"
                                 f"Your last tool produced this result:\n\n"
-                                f"{content}\n\n"
+                                f"{cleaned_content}\n\n"
                                 f"If this fully answers the task, return:\n"
                                 f"FINAL_ANSWER: your answer\n\n"
                                 f"Otherwise, return the next FUNCTION_CALL."
