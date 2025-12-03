@@ -1,70 +1,41 @@
-prompt = f"""
-You are an AI that must output ONE async Python function `solve()` using EXACTLY ONE tool from:
+You are an AI assistant. Generate an async Python function `solve()` to answer the user's query using ONE tool from the list below.
 
+TOOLS:
 {tool_descriptions}
 
-User Query:
-"{user_input}"
+USER QUERY: "{user_input}"
 
+RULES:
+1. Output ONLY a valid Python code block containing `async def solve():`.
+2. Call EXACTLY ONE tool using `await mcp.call_tool('tool_name', arguments)`.
+3. Arguments must match the tool's usage exactly.
+4. Handle output robustly:
+   - If `result.content[0].text` starts with `{{`, parse it: `data = json.loads(text)`.
+   - **CRITICAL:** JSON outputs ALWAYS use the key `result`. Use `data["result"]`.
+   - If it's plain text, use `result.content[0].text` directly.
+5. LOGIC & FORMATTING:
+   - **Relevance Check:** If `search_stored_documents` result does NOT contain keywords from the query, treat it as empty and call `duckduckgo_search_results`.
+   - **Summarization:** For search/text results, ALWAYS return `FURTHER_PROCESSING_REQUIRED: <data>`.
+   - ONLY return `FINAL_ANSWER: <value>` for simple facts/math or if the tool output IS the exact answer.
 
-🟥 ABSOLUTE REQUIREMENTS
-
-1. Output ONLY Python code.
-2. Must define: async def solve():
-3. Must execute EXACTLY ONE FUNCTION_CALL.
-4. If the user already provides structured data (clean webpage text, document text, summaries), DO NOT call tools. Return FINAL_ANSWER directly.
-
-
-🟧 TOOL CALL RULES
-
-5. Before calling a tool, paste its full Usage docstring inside triple quotes.
-6. Call tools ONLY using:
-       result = await mcp.call_tool('tool_name', input)
-7. Build `input` EXACTLY per the tool’s Usage docs.
-8. Parse tool output ONLY using:
-       parsed = json.loads(result.content[0].text)["result"]
-   (Never inline json.loads inside f-strings.)
-
-
-🟩 RETURN RULES
-
-9. If parsed data answers the query:
-       return f"FINAL_ANSWER: {{parsed}}"
-10. If the tool returns raw/unstructured data:
-       return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
-11. NEVER call json.loads if result.content[0].text is empty, missing, or not valid JSON.
-    In such cases you MUST return:
-        return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
-
-
-🟦 MINIMAL EXAMPLES
-
-
-Example A — Tool call + parse:
+EXAMPLE:
 ```python
-    import json
-    async def solve():
-        """Tool docstring"""
-        input = {{"input": {{"query": "IBM"}}}}
-        result = await mcp.call_tool('search', input)
-        parsed = json.loads(result.content[0].text)["result"]
-        return f"FINAL_ANSWER: {{parsed}}"
+import json
+async def solve():
+    """Example tool call."""
+    # 1. Prepare arguments
+    args = {{"input": {{"query": "example"}}}}
+    
+    # 2. Call tool
+    result = await mcp.call_tool('search_tool', args)
+    
+    # 3. Parse output (Robust)
+    content = result.content[0].text
+    if content.strip().startswith("{{"):
+        data = json.loads(content)["result"]
+    else:
+        data = content
+        
+    # 4. Return answer
+    return f"FURTHER_PROCESSING_REQUIRED: {{data}}"
 ```
-
-Example B — Raw content:
-```python
-    async def solve():
-        """Tool docstring"""
-        input = {{"url": "https://example.com"}}
-        result = await mcp.call_tool('extract_webpage', input)
-        return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
-```
-
-Example C — No tool needed:
-```python
-    async def solve():
-        answer = "Structured data already provided."
-        return f"FINAL_ANSWER: {{answer}}"
-```
-
-"""

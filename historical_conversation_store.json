@@ -1,3 +1,82 @@
 [
-
+  {
+    "query": "what are the futuristic idea for good environments?",
+    "answer": "[Max steps reached]",
+    "timestamp": "2025-12-03T22:07:24.930567"
+  },
+  {
+    "query": "what are the futuristic idea for good environments? just give me the simple answer",
+    "answer": "Sustainable practices, environmental literacy, and sustainable aircraft are futuristic ideas for good environments.",
+    "timestamp": "2025-12-03T22:08:05.830304"
+  },
+  {
+    "query": "what are the current AI market status?",
+    "answer": "The global AI market is experiencing rapid growth. Projections estimate the market will reach $4.8 trillion by 2033 (UNCTAD). Statista projects continued growth and development until 2030. MarketsandMarkets estimates a market size of $371.71 billion in 2025, reaching $2,407.02 billion by 2032. NVIDIA dominates the data center GPU market with a 92% share.",
+    "timestamp": "2025-12-03T22:08:39.164971"
+  },
+  {
+    "query": "who are all the market players in AI race, can you rank just top 5?",
+    "answer": "The top 5 market players in the AI race, based on available information, are: 1. NVIDIA, 2. IBM, 3. Leading companies from the Forbes AI 50 list, 4. Companies contributing significantly to AI models (as per Stanford HAI report), 5. High-performing companies identified by McKinsey. This ranking is preliminary and requires more in-depth analysis for a definitive assessment.",
+    "timestamp": "2025-12-03T22:10:09.172129"
+  },
+  {
+    "query": "who are the indian AI companies in global AI race, can you name any companies?",
+    "answer": "[Max steps reached]",
+    "timestamp": "2025-12-03T22:16:13.430459"
+  },
+  {
+    "query": "who are the indian AI companies in global AI race, can you name any companies? give me simple answer",
+    "answer": "Reliance Industries is an Indian company participating in the global AI race. Other Indian companies are contributing, but not specifically named here.",
+    "timestamp": "2025-12-03T22:16:47.710043"
+  },
+  {
+    "query": "what are Reliance industries doing in AI field?",
+    "answer": "Reliance is partnering with NVIDIA to advance AI in India, collaborating with Meta to build Llama-based enterprise AI solutions, and partnering with Google to accelerate India's AI revolution.",
+    "timestamp": "2025-12-03T22:20:54.936610"
+  },
+  {
+    "query": "How much Anmol singh paid for his DLF apartment via Capbridge?",
+    "answer": "The provided document does not contain the answer.",
+    "timestamp": "2025-12-03T22:22:10.662709"
+  },
+  {
+    "query": "How much Anmol singh paid for his DLF apartment via Capbridge?",
+    "answer": "The provided document does not contain the answer.",
+    "timestamp": "2025-12-03T22:22:29.694166"
+  },
+  {
+    "query": "How much Anmol singh paid for his DLF apartment via Capbridge?",
+    "answer": "Capbridge transferred Rs 42.94 crore to DLF for the apartment.",
+    "timestamp": "2025-12-03T22:23:46.698836"
+  },
+  {
+    "query": "What do you know about Don Tapscott and Anthony Williams?",
+    "answer": "Don Tapscott and Anthony D. Williams are the authors of the book 'Wikinomics: How Mass Collaboration Changes Everything'. They also co-authored 'Radical Openness'.",
+    "timestamp": "2025-12-03T22:24:50.205158"
+  },
+  {
+    "query": "Find the ASCII values of characters in INDIA and then return sum of exponentials of those values.",
+    "answer": "7.599822246093079e+33",
+    "timestamp": "2025-12-03T22:25:09.836505"
+  },
+  {
+    "query": "What is the relationship between Gensol and Go-Auto?",
+    "answer": "Gensol appears to have a lending relationship with Go-Auto, potentially for the purchase of EVs. Funds obtained by Gensol from IREDA were reportedly diverted to Go-Auto. Go-Auto supplies EVs that are leased to BluSmart. There are also reports of financial irregularities involving Gensol and Go-Auto.",
+    "timestamp": "2025-12-03T22:25:26.592200"
+  },
+  {
+    "query": "what are the top 5 best AI tools for job? ",
+    "answer": "According to a Careerflow blog post from August 4, 2025, the top 5 job search tools are: 1. Careerflow (offers LinkedIn profile makeover, resume builder, resume review, and cover letter generator). The other 4 tools are truncated in the provided text.",
+    "timestamp": "2025-12-03T22:26:28.494204"
+  },
+  {
+    "query": "what is the present prime minister of India?",
+    "answer": "Narendra Modi is the current prime minister of India.",
+    "timestamp": "2025-12-03T22:28:17.026312"
+  },
+  {
+    "query": "who is the CEO of OpenAI ?",
+    "answer": "Sam Altman is the CEO of OpenAI.",
+    "timestamp": "2025-12-03T22:29:52.685700"
+  }
 ]

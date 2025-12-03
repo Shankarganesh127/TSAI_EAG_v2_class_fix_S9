@@ -10,9 +10,20 @@ try:
     from agent import log
 except ImportError:
     import datetime
+    from pathlib import Path
     def log(stage: str, msg: str):
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+        log_msg = f"[{now}] [{stage}] {msg}"
+        print(log_msg)
+        # Write to log file
+        log_dir = Path("logs")
+        log_dir.mkdir(exist_ok=True)
+        log_file = log_dir / "agent.log"
+        try:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(log_msg + '\n')
+        except Exception:
+            pass
 
 model = ModelManager()
 
@@ -44,6 +55,15 @@ async def generate_plan(
     if memory_texts and memory_texts != "None":
         prompt += f"\n\n📜 History / Memory:\n{memory_texts}\n"
         prompt += "\n❗ IMPORTANT: If the History above shows that you have already retrieved the necessary information, DO NOT call the tool again. Instead, synthesize the answer and return 'FINAL_ANSWER: ...'."
+
+    log("decision", "=" * 50)
+    log("decision", f"DECISION STEP STARTED (Step {step_num}/{max_steps})")
+    log("decision", f"User Input: {user_input}")
+    log("decision", f"Intent: {perception.intent}")
+    log("decision", f"Entities: {perception.entities}")
+    log("decision", f"Memory Items: {len(memory_items)}")
+    log("decision", f"Prompt:\n{prompt}")
+    log("decision", "=" * 50)
 
 
     try:

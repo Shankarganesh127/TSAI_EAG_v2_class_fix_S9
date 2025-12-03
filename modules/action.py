@@ -12,9 +12,20 @@ try:
     from agent import log
 except ImportError:
     import datetime
+    from pathlib import Path
     def log(stage: str, msg: str):
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+        log_msg = f"[{now}] [{stage}] {msg}"
+        print(log_msg)
+        # Write to log file
+        log_dir = Path("logs")
+        log_dir.mkdir(exist_ok=True)
+        log_file = log_dir / "agent.log"
+        try:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(log_msg + '\n')
+        except Exception:
+            pass
 
 class ToolCallResult(BaseModel):
     tool_name: str
@@ -25,7 +36,10 @@ class ToolCallResult(BaseModel):
 MAX_TOOL_CALLS_PER_PLAN = 5
 
 async def run_python_sandbox(code: str, dispatcher: Any) -> str:
-    print("[action] 🔍 Entered run_python_sandbox()")
+    log("action", "=" * 50)
+    log("action", "ACTION STEP STARTED")
+    log("action", f"Code to execute:\n{code}")
+    log("action", "=" * 50)
 
     # Create a fresh module scope
     sandbox = types.ModuleType("sandbox")
@@ -42,7 +56,9 @@ async def run_python_sandbox(code: str, dispatcher: Any) -> str:
                 if self.call_count > MAX_TOOL_CALLS_PER_PLAN:
                     raise RuntimeError(f"Exceeded max tool calls ({MAX_TOOL_CALLS_PER_PLAN}) in solve() plan.")
                 # REAL tool call now
+                log("action", f"Calling tool: {tool_name} with args: {input_dict}")
                 result = await self.dispatcher.call_tool(tool_name, input_dict)
+                log("action", f"Tool result: {result}")
                 return result
 
         sandbox.mcp = SandboxMCP(dispatcher)

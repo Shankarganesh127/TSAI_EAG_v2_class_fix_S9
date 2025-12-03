@@ -1,0 +1,19 @@
+[
+  {
+    "timestamp": 1764790735.9264262,
+    "type": "run_metadata",
+    "text": "Started new session with input: What do you know about Don Tapscott and Anthony Williams? at 2025-12-03T19:38:55.926426",
+    "tool_name": null,
+    "tool_args": null,
+    "tool_result": null,
+    "final_answer": null,
+    "tags": [
+      "run_start"
+    ],
+    "success": null,
+    "metadata": {
+      "start_time": "2025-12-03T19:38:55.926426",
+      "step": 0
+    }
+  }
+]

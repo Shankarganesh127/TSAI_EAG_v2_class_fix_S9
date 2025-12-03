@@ -13,9 +13,23 @@ from pathlib import Path
 from difflib import SequenceMatcher
 
 def log(stage: str, msg: str):
-    """Simple timestamped console logger."""
+    """Timestamped logger that writes to both console and file."""
     now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"[{now}] [{stage}] {msg}")
+    log_msg = f"[{now}] [{stage}] {msg}"
+    
+    # Print to console
+    print(log_msg)
+    
+    # Write to log file
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    log_file = log_dir / "agent.log"
+    
+    try:
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(log_msg + '\n')
+    except Exception as e:
+        print(f"[{now}] [log] Failed to write to log file: {e}")
 
 class ConversationHistory:
     """Manages historical conversation storage and similarity matching."""
@@ -76,7 +90,7 @@ class ConversationHistory:
 async def main():
     # Load .env variables before anything else
     load_dotenv()
-    print("🧠 Cortex-R Agent Ready (env loaded)")
+    log("agent", "🧠 Cortex-R Agent Ready (env loaded)")
     # Optional: brief sanity check for search keys
     for key in ["GOOGLE_API_KEY", "GOOGLE_CSE_ID"]:
         if os.getenv(key) is None:
@@ -111,7 +125,7 @@ async def main():
                 print(f"   Timestamp: {cached['timestamp']}")
                 use_cached = input("   Use cached answer? (y/n) → ").lower().strip()
                 if use_cached == 'y':
-                    print(f"\n💡 Cached Answer: {cached['answer']}")
+                    log("agent", f"💡 Cached Answer: {cached['answer']}")
                     continue
 
             while True:
@@ -131,25 +145,25 @@ async def main():
                     answer = result["result"]
                     if "FINAL_ANSWER:" in answer:
                         final_answer = answer.split('FINAL_ANSWER:')[1].strip()
-                        print(f"\n💡 Final Answer: {final_answer}")
+                        log("agent", f"💡 Final Answer: {final_answer}")
                         # Save to conversation history ONLY for successful final answers
                         original_query = context.user_input if hasattr(context, 'user_input') else user_input
                         conv_history.add(original_query, final_answer)
                         break
                     elif "FURTHER_PROCESSING_REQUIRED:" in answer:
                         user_input = answer.split("FURTHER_PROCESSING_REQUIRED:")[1].strip()
-                        print(f"\n🔁 Further Processing Required: {user_input}")
+                        log("agent", f"🔁 Further Processing Required: {user_input}")
                         continue  # 🧠 Re-run agent with updated input
                     else:
                         # Non-final result; do NOT save to history
-                        print(f"\n💡 Final Answer (raw): {answer}")
+                        log("agent", f"💡 Final Answer (raw): {answer}")
                         break
                 else:
                     # Unexpected non-dict result; do NOT save to history
-                    print(f"\n💡 Final Answer (unexpected): {result}")
+                    log("agent", f"💡 Final Answer (unexpected): {result}")
                     break
     except KeyboardInterrupt:
-        print("\n👋 Received exit signal. Shutting down...")
+        log("agent", "👋 Received exit signal. Shutting down...")
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -162,4 +176,4 @@ if __name__ == "__main__":
 # What is the relationship between Gensol and Go-Auto?
 # which course are we teaching on Canvas LMS? "H:\DownloadsH\How to use Canvas LMS.pdf"
 # Summarize this page: https://theschoolof.ai/
-# What is the log value of the amount that Anmol singh paid for his DLF apartment via Capbridge? 
+# What is the log value of the amount that Anmol singh paid for his DLF apartment via Capbridge?

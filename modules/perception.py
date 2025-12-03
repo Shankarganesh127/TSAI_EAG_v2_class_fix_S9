@@ -14,9 +14,20 @@ try:
     from agent import log
 except ImportError:
     import datetime
+    from pathlib import Path
     def log(stage: str, msg: str):
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+        log_msg = f"[{now}] [{stage}] {msg}"
+        print(log_msg)
+        # Write to log file
+        log_dir = Path("logs")
+        log_dir.mkdir(exist_ok=True)
+        log_file = log_dir / "agent.log"
+        try:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(log_msg + '\n')
+        except Exception:
+            pass
 
 model = ModelManager()
 
@@ -49,6 +60,13 @@ async def extract_perception(user_input: str, mcp_server_descriptions: dict) -> 
         servers_text=servers_text,
         user_input=user_input
     )
+    
+    log("perception", "=" * 50)
+    log("perception", "PERCEPTION STEP STARTED")
+    log("perception", f"User Input: {user_input}")
+    log("perception", f"Available Servers: {list(mcp_server_descriptions.keys())}")
+    log("perception", f"Prompt:\n{prompt}")
+    log("perception", "=" * 50)
     
 
     try:
