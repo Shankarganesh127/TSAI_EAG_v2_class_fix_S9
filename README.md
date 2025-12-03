@@ -114,3 +114,58 @@ The agent will initialize MCP servers and prompt: "What do you want to solve tod
 ## License
 
 Internal/class project. Do not redistribute without permission.
+
+## Agent Execution Screenshot
+
+![Agent execution showing detailed logging with perception, memory, decision, and action steps](image.png)
+
+*The agent in action: Complete execution flow with detailed logging of all internal steps including perception, memory retrieval, decision-making, and action execution.*
+
+## Documentation
+
+📄 **[Architecture Report (PDF)](Architecture_report.pdf)** - Detailed architecture documentation and design decisions
+
+```mermaid
+graph TD
+    User([User]) <--> AgentEntry[agent.py]
+    
+    subgraph Core System
+        AgentEntry -->|Initialize| MultiMCP[core/session.py: MultiMCP]
+        AgentEntry -->|Create Context| Context[core/context.py: AgentContext]
+        AgentEntry -->|Start Loop| Loop[core/loop.py: AgentLoop]
+        
+        Loop -->|1. Perception| Perception[modules/perception.py]
+        Loop -->|2. Planning| Decision[modules/decision.py]
+        Loop -->|3. Execution| Action[modules/action.py]
+        
+        Context -->|Stores State| MemoryManager[modules/memory.py]
+    end
+    
+    subgraph Modules
+        Perception -->|Selects Servers| MultiMCP
+        Decision -->|Generates Code| LLM[ModelManager]
+        Action -->|Executes Code| Sandbox[Python Sandbox]
+    end
+    
+    subgraph MCP Layer
+        Sandbox -->|Calls Tools| MultiMCP
+        MultiMCP -->|Connects to| Server1[mcp_server_1.py]
+        MultiMCP -->|Connects to| Server2[mcp_server_2.py]
+        MultiMCP -->|Connects to| Server3[mcp_server_3.py]
+        MultiMCP -->|Connects to| MemoryServer[mcp_server_memory.py]
+    end
+    
+    subgraph Data & Config
+        MemoryServer -->|Reads/Writes| MemoryFiles[(Memory JSONs)]
+        MemoryManager -->|Reads/Writes| MemoryFiles
+        AgentEntry -->|Reads| Config[config/profiles.yaml]
+    end
+
+    %% Data Flow
+    User -->|Input| Context
+    Perception -->|Tool Hints| Decision
+    Decision -->|"Plan (Python Code)"| Action
+    Action -->|Tool Results| Context
+    Context -->|History| Decision
+```
+
